@@ -4,194 +4,101 @@ public class SimpleBall : MonoBehaviour
 {
     public Transform player;
 
-    // Dribble speed
-    public float moveSpeed = 6f;
+    // Ball move
+    Vector3 move;
 
     // Roll speed
-    public float rotateSpeed = 250f;
-
-    // PASS / SHOOT / KICK
-    public float passSpeed = 10f;
-    public float shootSpeed = 28f;
-    public float kickSpeed = 35f;
-
-    // Ball velocity
-    private Vector3 shotVelocity;
-
-    // Air velocity
-    private float airVelocity = 0f;
+    public float rollSpeed = 500f;
 
     void Update()
     {
-        // Distance from player
         float distance = Vector3.Distance(
             transform.position,
             player.position
         );
 
-        // DRIBBLE
-        if (distance < 0.7f && transform.position.y <= 0.51f)
+        // Ball player এর সাথে যাবে
+        if (distance < 0.7f)
         {
-            Vector3 dir = player.forward.normalized;
+            Vector3 dir =
+                player.forward.normalized;
 
-            // Move ball
             transform.position +=
-                dir * moveSpeed * Time.deltaTime;
+                dir *
+                6f *
+                Time.deltaTime;
 
-            // REAL BALL ROLL
+            // Roll
             Vector3 rollAxis =
                 Vector3.Cross(Vector3.up, dir);
 
             transform.Rotate(
                 rollAxis,
-                rotateSpeed * Time.deltaTime,
-                Space.World
-            );
-        }
-
-        // SHOT MOVEMENT
-        transform.position +=
-            shotVelocity * Time.deltaTime;
-
-        // Stop if player blocks ball
-        if (distance < 0.8f &&
-            shotVelocity.magnitude > 1f)
-        {
-            shotVelocity *= 0.85f;
-        }
-
-        // REALISTIC SHOT ROLL
-        if (shotVelocity.magnitude > 0.5f)
-        {
-            Vector3 shotDir =
-                shotVelocity.normalized;
-
-            Vector3 rollAxis =
-                Vector3.Cross(Vector3.up, shotDir);
-
-            transform.Rotate(
-                rollAxis,
-                shotVelocity.magnitude *
-                250f *
+                rollSpeed *
                 Time.deltaTime,
                 Space.World
             );
         }
-        else
-        {
-            // FULL STOP
-            shotVelocity = Vector3.zero;
-        }
 
-        // SLOW DOWN
-        shotVelocity = Vector3.Lerp(
-            shotVelocity,
-            Vector3.zero,
-            0.5f * Time.deltaTime
-        );
-
-        // GRAVITY
-        airVelocity -= 20f * Time.deltaTime;
-
+        // Ball move
         transform.position +=
-            Vector3.up *
-            airVelocity *
+            move *
             Time.deltaTime;
 
-        // GROUND COLLISION + REALISTIC BOUNCE
-        if (transform.position.y <= 0.5f)
+        // Roll while moving
+        if (move.magnitude > 0.1f)
         {
-            transform.position = new Vector3(
-                transform.position.x,
-                0.5f,
-                transform.position.z
+            Vector3 dir =
+                move.normalized;
+
+            Vector3 rollAxis =
+                Vector3.Cross(Vector3.up, dir);
+
+            transform.Rotate(
+                rollAxis,
+                move.magnitude *
+                40f *
+                Time.deltaTime,
+                Space.World
             );
+        }
 
-            // Small bounce
-            if (Mathf.Abs(airVelocity) > 1f)
-            {
-                airVelocity *= -0.35f;
+        // Slow down
+        move = Vector3.Lerp(
+            move,
+            Vector3.zero,
+            0.2f * Time.deltaTime
+        );
 
-                // lose speed after bounce
-                shotVelocity *= 0.85f;
-            }
-            else
-            {
-                airVelocity = 0f;
-            }
+        // Stop if player blocks ball
+        if (distance < 0.6f &&
+            move.magnitude > 0.1f)
+        {
+            move = Vector3.zero;
         }
     }
 
     // PASS
     public void Pass()
     {
-        float distance = Vector3.Distance(
-            transform.position,
-            player.position
-        );
-
-        if (distance < 1.2f)
-        {
-            Invoke(nameof(StartPass), 0.3f);
-        }
-    }
-
-    void StartPass()
-    {
-        // Ground pass
-        shotVelocity =
-            player.forward * passSpeed;
-
-        airVelocity = 0f;
+        move = player.forward * 5f;
     }
 
     // SHOOT
     public void Shoot()
     {
-        float distance = Vector3.Distance(
-            transform.position,
-            player.position
-        );
-
-        if (distance < 1.2f)
-        {
-            Invoke(nameof(StartShoot), 0.45f);
-        }
-    }
-
-    void StartShoot()
-    {
-        // Power shot
-        shotVelocity =
-            player.forward * shootSpeed;
-
-        // Extra forward push
-        shotVelocity *= 1.3f;
-
-        // Air curve
-        airVelocity = 10f;
+        move = player.forward * 10f;
     }
 
     // KICK
     public void Kick()
     {
-        float distance = Vector3.Distance(
-            transform.position,
-            player.position
-        );
-
-        if (distance < 1.2f)
-        {
-            Invoke(nameof(StartKick), 0.5f);
-        }
+        move = player.forward * 20f;
     }
 
-    void StartKick()
+    // STOP BALL
+    public void StopBall()
     {
-        // Big air kick
-        shotVelocity =
-            player.forward * kickSpeed;
-
-        airVelocity = 12f;
+        move = Vector3.zero;
     }
 }
