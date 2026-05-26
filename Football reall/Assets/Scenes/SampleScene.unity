@@ -834,7 +834,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SimpleBall
   player: {fileID: 667561382}
   moveSpeed: 5
-  rotateSpeed: 1000
+  rotateSpeed: 600
   passSpeed: 2
   shootSpeed: 5
   kickSpeed: 8

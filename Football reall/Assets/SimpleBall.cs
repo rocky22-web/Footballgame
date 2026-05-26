@@ -8,15 +8,18 @@ public class SimpleBall : MonoBehaviour
     public float moveSpeed = 6f;
 
     // Roll speed
-    public float rotateSpeed = 500f;
+    public float rotateSpeed = 250f;
 
     // PASS / SHOOT / KICK
     public float passSpeed = 10f;
-    public float shootSpeed = 20f;
-    public float kickSpeed = 60f;
+    public float shootSpeed = 28f;
+    public float kickSpeed = 35f;
 
     // Ball velocity
     private Vector3 shotVelocity;
+
+    // Air velocity
+    private float airVelocity = 0f;
 
     void Update()
     {
@@ -27,7 +30,7 @@ public class SimpleBall : MonoBehaviour
         );
 
         // DRIBBLE
-        if (distance < 0.6f)
+        if (distance < 0.7f && transform.position.y <= 0.51f)
         {
             Vector3 dir = player.forward.normalized;
 
@@ -50,15 +53,15 @@ public class SimpleBall : MonoBehaviour
         transform.position +=
             shotVelocity * Time.deltaTime;
 
-        // Smooth slow down
-        shotVelocity = Vector3.Lerp(
-            shotVelocity,
-            Vector3.zero,
-            0.15f * Time.deltaTime
-        );
+        // Stop if player blocks ball
+        if (distance < 0.8f &&
+            shotVelocity.magnitude > 1f)
+        {
+            shotVelocity *= 0.85f;
+        }
 
-        // SHOT ROLL
-        if (shotVelocity.magnitude > 0.01f)
+        // REALISTIC SHOT ROLL
+        if (shotVelocity.magnitude > 0.5f)
         {
             Vector3 shotDir =
                 shotVelocity.normalized;
@@ -69,10 +72,53 @@ public class SimpleBall : MonoBehaviour
             transform.Rotate(
                 rollAxis,
                 shotVelocity.magnitude *
-                900f *
+                250f *
                 Time.deltaTime,
                 Space.World
             );
+        }
+        else
+        {
+            // FULL STOP
+            shotVelocity = Vector3.zero;
+        }
+
+        // SLOW DOWN
+        shotVelocity = Vector3.Lerp(
+            shotVelocity,
+            Vector3.zero,
+            0.5f * Time.deltaTime
+        );
+
+        // GRAVITY
+        airVelocity -= 20f * Time.deltaTime;
+
+        transform.position +=
+            Vector3.up *
+            airVelocity *
+            Time.deltaTime;
+
+        // GROUND COLLISION + REALISTIC BOUNCE
+        if (transform.position.y <= 0.5f)
+        {
+            transform.position = new Vector3(
+                transform.position.x,
+                0.5f,
+                transform.position.z
+            );
+
+            // Small bounce
+            if (Mathf.Abs(airVelocity) > 1f)
+            {
+                airVelocity *= -0.35f;
+
+                // lose speed after bounce
+                shotVelocity *= 0.85f;
+            }
+            else
+            {
+                airVelocity = 0f;
+            }
         }
     }
 
@@ -86,14 +132,17 @@ public class SimpleBall : MonoBehaviour
 
         if (distance < 1.2f)
         {
-            Invoke(nameof(StartPass), 0.6f);
+            Invoke(nameof(StartPass), 0.3f);
         }
     }
 
     void StartPass()
     {
+        // Ground pass
         shotVelocity =
             player.forward * passSpeed;
+
+        airVelocity = 0f;
     }
 
     // SHOOT
@@ -106,14 +155,21 @@ public class SimpleBall : MonoBehaviour
 
         if (distance < 1.2f)
         {
-            Invoke(nameof(StartShoot), 0.6f);
+            Invoke(nameof(StartShoot), 0.45f);
         }
     }
 
     void StartShoot()
     {
+        // Power shot
         shotVelocity =
             player.forward * shootSpeed;
+
+        // Extra forward push
+        shotVelocity *= 1.3f;
+
+        // Air curve
+        airVelocity = 10f;
     }
 
     // KICK
@@ -126,13 +182,16 @@ public class SimpleBall : MonoBehaviour
 
         if (distance < 1.2f)
         {
-            Invoke(nameof(StartKick), 0.6f);
+            Invoke(nameof(StartKick), 0.5f);
         }
     }
 
     void StartKick()
     {
+        // Big air kick
         shotVelocity =
             player.forward * kickSpeed;
+
+        airVelocity = 12f;
     }
 }
