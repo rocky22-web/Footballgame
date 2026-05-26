@@ -8,7 +8,7 @@ public class SimpleBall : MonoBehaviour
     public float moveSpeed = 6f;
 
     // Roll speed
-    public float rotateSpeed = 700f;
+    public float rotateSpeed = 500f;
 
     // PASS / SHOOT / KICK
     public float passSpeed = 10f;
@@ -27,21 +27,20 @@ public class SimpleBall : MonoBehaviour
         );
 
         // DRIBBLE
-        if (distance < 0.7f)
+        if (distance < 0.6f)
         {
-            Vector3 dir = player.forward;
+            Vector3 dir = player.forward.normalized;
 
             // Move ball
             transform.position +=
                 dir * moveSpeed * Time.deltaTime;
 
-            // REALISTIC ROLL
+            // REAL BALL ROLL
+            Vector3 rollAxis =
+                Vector3.Cross(Vector3.up, dir);
+
             transform.Rotate(
-                new Vector3(
-                    -dir.z,
-                    0,
-                    dir.x
-                ),
+                rollAxis,
                 rotateSpeed * Time.deltaTime,
                 Space.World
             );
@@ -58,15 +57,17 @@ public class SimpleBall : MonoBehaviour
             0.15f * Time.deltaTime
         );
 
-        // REALISTIC SHOT ROLL
+        // SHOT ROLL
         if (shotVelocity.magnitude > 0.01f)
         {
+            Vector3 shotDir =
+                shotVelocity.normalized;
+
+            Vector3 rollAxis =
+                Vector3.Cross(Vector3.up, shotDir);
+
             transform.Rotate(
-                new Vector3(
-                    -shotVelocity.z,
-                    0,
-                    shotVelocity.x
-                ),
+                rollAxis,
                 shotVelocity.magnitude *
                 900f *
                 Time.deltaTime,
